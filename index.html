@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自然談話を聴いてみる</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 32px;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+        
+        .info-banner {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border-left: 5px solid #4CAF50;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .info-banner h2 {
+            margin-top: 0;
+            color: #2e7d32;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .info-banner p {
+            color: #1b5e20;
+            margin: 10px 0;
+        }
+        
+        .status-bar {
+            background-color: #f8f9fa;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .status-info {
+            color: #6c757d;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .status-info span {
+            color: #007bff;
+            font-weight: bold;
+        }
+        
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #4CAF50;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+        }
+        
+        .example-list {
+            margin-top: 30px;
+            max-height: 600px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        .example-list::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .example-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        .example-list::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            border-radius: 4px;
+        }
+        
+        .example-list::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #5a67d8 0%, #6b46c1 100%);
+        }
+        
+        .example-item {
+            margin: 12px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .example-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent 0%, rgba(102, 126, 234, 0.1) 50%, transparent 100%);
+            transition: left 0.5s ease;
+        }
+        
+        .example-item:hover::before {
+            left: 100%;
+        }
+        
+        .example-item:hover {
+            background-color: #e3f2fd;
+            border-color: #2196F3;
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+        }
+        
+        .example-item.playing {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border-color: #4CAF50;
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+        
+        .example-item.loading {
+            opacity: 0.7;
+            cursor: wait;
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+        }
+        
+        .example-item.error {
+            background-color: #ffebee;
+            border-color: #f44336;
+            opacity: 0.8;
+        }
+        
+        .example-number {
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-right: 10px;
+            font-size: 18px;
+        }
+        
+        .example-text {
+            margin: 8px 0;
+        }
+        
+        .interlinear-container {
+            margin-bottom: 10px;
+            font-family: 'Courier New', monospace;
+            line-height: 1.8;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        
+        .interlinear-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5em;
+        }
+        
+        .word-group {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: flex-start;
+            margin-right: 0.5em;
+        }
+        
+        .miyako-word {
+            font-size: 18px;
+            color: #1a1a1a;
+            font-weight: 600;
+            font-family: 'Optima', 'Segoe UI', 'Candara', 'Calibri', 'Arial', sans-serif;
+            letter-spacing: 0.5px;
+        }
+        
+        .gloss-word {
+            font-size: 16px;
+            color: #666;
+            font-variant: small-caps;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .gloss-clickable {
+            cursor: pointer;
+            text-decoration: underline dotted;
+            color: #b71c1c;
+            font-weight: bold;
+            transition: color 0.2s ease;
+        }
+        
+        .gloss-clickable:hover {
+            color: #d32f2f;
+            text-decoration: underline;
+        }
+        
+        .japanese-text {
+            font-size: 16px;
+            color: #424242;
+            line-height: 1.6;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            white-space: normal;
+            font-weight: 500;
+        }
+        
+        .play-icon {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .example-item:hover .play-icon {
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
+        
+        .example-item.playing .play-icon {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            animation: rotateIcon 2s linear infinite;
+        }
+        
+        .example-item.loading .play-icon {
+            background: linear-gradient(135deg, #FFA726 0%, #FB8C00 100%);
+            animation: spin 1s linear infinite;
+        }
+        
+        .example-item.error .play-icon {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+        }
+        
+        @keyframes rotateIcon {
+            from { transform: translateY(-50%) rotate(0deg); }
+            to { transform: translateY(-50%) rotate(360deg); }
+        }
+        
+        @keyframes spin {
+            0% { transform: translateY(-50%) rotate(0deg); }
+            100% { transform: translateY(-50%) rotate(360deg); }
+        }
+        
+        audio {
+            display: none;
+        }
+        
+        #audioPlayer {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 20px 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: none;
+            align-items: center;
+            gap: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            color: white;
+        }
+        
+        #audioPlayer.active {
+            display: flex;
+            animation: slideInUp 0.3s ease-out;
+        }
+        
+        @keyframes slideInUp {
+            from {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        #currentExample {
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .audio-progress {
+            width: 200px;
+            height: 6px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .audio-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .loading-content {
+            background-color: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            margin: 20px auto;
+            border: 4px solid rgba(102, 126, 234, 0.2);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        /* グロス吹き出しのスタイル */
+        .gloss-tooltip {
+            position: fixed;
+            background-color: #1a1a2e;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 1000;
+            max-width: 300px;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: none;
+        }
+        
+        .gloss-tooltip.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .gloss-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #1a1a2e transparent transparent transparent;
+        }
+        
+        .gloss-tooltip-content {
+            line-height: 1.6;
+        }
+        
+        .gloss-tooltip-title {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 4px;
+        }
+        
+        .gloss-tooltip-link {
+            display: block;
+            margin-top: 8px;
+            color: #64b5f6;
+            font-size: 12px;
+            text-decoration: none;
+        }
+        
+        .gloss-tooltip-link:hover {
+            text-decoration: underline;
+        }
+        
+        .gloss-info-banner {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-left: 5px solid #2196F3;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #0d47a1;
+        }
+        
+        .gloss-info-banner a {
+            color: #1565c0;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>自然談話を聴いてみる</h1>
+        <div class="subtitle">ユナイタマ伝説（宮古語伊良部長浜方言）</div>
+        
+        <div class="gloss-info-banner">
+            <strong>グロスをクリックすると、<a href="https://michinorishimoji.github.io/searchgloss/" target="_blank">SearchGloss</a>経由でグロスの検索ができます</strong>
+        </div>
+        
+        <div class="status-bar">
+            <div class="status-info">
+                <div class="status-indicator"></div>
+                ステータス: <span id="statusText">オンライン</span>
+            </div>
+            <div class="status-info">
+                音源: <span id="sourceText">Zenodo（直接接続）</span>
+            </div>
+        </div>
+        
+        <div class="example-list" id="exampleList">
+            <!-- 例文はJavaScriptで動的に生成されます -->
+        </div>
+        
+        <div id="audioPlayer">
+            <span>再生中：</span>
+            <span id="currentExample"></span>
+            <div class="audio-progress">
+                <div class="audio-progress-bar" id="progressBar"></div>
+            </div>
+        </div>
+        
+        <audio id="audio" crossorigin="anonymous"></audio>
+        
+        <!-- グロス吹き出し -->
+        <div class="gloss-tooltip" id="glossTooltip">
+            <div class="gloss-tooltip-content">
+                <div class="gloss-tooltip-title" id="glossTitle"></div>
+                <div id="glossDescription"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <h2>音声ファイルを読み込み中...</h2>
+            <div class="loading-spinner"></div>
+            <p id="loadingMessage">少々お待ちください</p>
+        </div>
+    </div>
+
+    <script>
+// グロスの和訳辞書
+const glossDictionary = {
+    'foc': '焦点',
+    'gen': '属格',
+    'com': '共格',
+    'quot': '引用',
+    'cop': 'コピュラ',
+    'pst': '過去',
+    'hs': '伝聞',
+    'fil': 'フィラー',
+    'all': '向格',
+    'q': '疑問',
+    'dsc': '談話標識',
+    'thm': 'テーマ',
+    'csl': '理由',
+    'acc': '対格',
+    'imp': '命令',
+    'seq': '継起',
+    'cvlz': '使役化',
+    'acc2': '対格2',
+    'crcm': '状況',
+    'nom': '主格',
+    'ant': '先行',
+    'top': '主題',
+    'pot': '可能',
+    'neg': '否定',
+    'ben': '受益',
+    'hon': '敬語',
+    'npst': '非過去',
+    'inf': '中止',
+    'caus': '使役',
+    'prog': '進行',
+    'cnf': '確認',
+    'clf': '類別詞',
+    'add': '添加',
+    'dat': '与格',
+    'vlz': '動詞化',
+    'voc': '呼格',
+    'otop': '対比主題',
+    'refl': '再帰',
+    'sg': '単数',
+    'pl': '複数',
+    'int': '意志',
+    'dim': '指小辞',
+    'cond': '条件',
+    'asr': '断定',
+    'pros': '推測',
+    'cnlz': '名詞化',
+    'cvlz': '動詞化',
+    'pass': '受身',
+    'dub': '推量',
+    'ins': '具格',
+    'cnc': '逆接',
+    'incl': '包括',
+    'prox': '近称',
+    'chs': '推定',
+    'indf': '不定',
+    'abl': '奪格',
+    'rsl': '結果'
+};
+
+// 複合グロスを解析して説明を生成
+function getGlossTranslation(gloss) {
+    const parts = gloss.toLowerCase().split('.');
+    const translations = [];
+    
+    for (const part of parts) {
+        if (glossDictionary[part]) {
+            translations.push(glossDictionary[part]);
+        } else {
+            translations.push(part.toUpperCase());
+        }
+    }
+    
+    if (translations.length > 1) {
+        return translations.join('.');
+    } else if (translations.length === 1) {
+        return translations[0];
+    } else {
+        return 'SearchGloss該当なし';
+    }
+}
+
+// Zenodoの音声ファイルURL（全30個）
+const audioUrls = [
+    "https://zenodo.org/records/16613426/files/001_tooriikentiidui.wav?download=1",
+    "https://zenodo.org/records/16613426/files/002_ssibara_maibara.wav?download=1",
+    "https://zenodo.org/records/16613426/files/003_satubZtunu_a-tarca.wav?download=1",
+    "https://zenodo.org/records/16613426/files/004_fɨta-kiv.wav?download=1",
+    "https://zenodo.org/records/16613426/files/005_fɨta-kiv_ar-i-utuidu.wav?download=1",
+    "https://zenodo.org/records/16613426/files/006_pZtu-kivga_imnu_acca_ja-i-ba.wav?download=1",
+    "https://zenodo.org/records/16613426/files/007_pZtu-kivnu_pZtunu.wav?download=1",
+    "https://zenodo.org/records/16613426/files/008_ssibararu_a-tarru_maibararu.wav?download=1",
+    "https://zenodo.org/records/16613426/files/009_pZtu-kivnu_fɨta-kivkara_pZtu.wav?download=1",
+    "https://zenodo.org/records/16613426/files/010_junai_ningjo_junaitamau_tu-i-.wav?download=1",
+    "https://zenodo.org/records/16613426/files/011_kurus-i-i_mmja_uria_ZZu_ja-i-.wav?download=1",
+    "https://zenodo.org/records/16613426/files/012_kurus-i-i_katabataubaa_jak-i.wav?download=1",
+    "https://zenodo.org/records/16613426/files/013_katabataubaa_jaanu_panan_n.wav?download=1",
+    "https://zenodo.org/records/16613426/files/014_aidu_rjuukjuunurjuuguunu_ka.wav?download=1",
+    "https://zenodo.org/records/16613426/files/015_junaitama_junaitamati_ass-i-b.wav?download=1",
+    "https://zenodo.org/records/16613426/files/016_naraa_mmja_kurus-aidu.wav?download=1",
+    "https://zenodo.org/records/16613426/files/017_katabata_fa-ai-i_katabataa_ja.wav?download=1",
+    "https://zenodo.org/records/16613426/files/018_naranna_kuu-rai-nti_aZ-tar.wav?download=1",
+    "https://zenodo.org/records/16613426/files/019_unu_rjuukjuurjuuguunu_kamnu.wav?download=1",
+    "https://zenodo.org/records/16613426/files/020_naraa_katabataa_fa-ai-i_kata.wav?download=1",
+    "https://zenodo.org/records/16613426/files/021_ttigaa_ukunammu_jarah-a-diss.wav?download=1",
+    "https://zenodo.org/records/16613426/files/022_uri-i_kuujuutii_aZ-tarjaa.wav?download=1",
+    "https://zenodo.org/records/16613426/files/023_nnditi_aZ-tarjaa.wav?download=1",
+    "https://zenodo.org/records/16613426/files/024_uku-nammu_baatti_jarasɨ-tarj.wav?download=1",
+    "https://zenodo.org/records/16613426/files/025_tuduk-a-nniba.wav?download=1",
+    "https://zenodo.org/records/16613426/files/026_mata_mme-pZtunam_ookii_ukunam.wav?download=1",
+    "https://zenodo.org/records/16613426/files/027_zazaattiimmja_uri-immja_uri.wav?download=1",
+    "https://zenodo.org/records/16613426/files/028_aidu_mmja_umanu_ssibara_maiba.wav?download=1",
+    "https://zenodo.org/records/16613426/files/029_doofɨti_uti-ii.wav?download=1",
+    "https://zenodo.org/records/16613426/files/030_mmja_tooriiken_nar-tarca.wav?download=1"
+];
+
+// 例文データ（全30例文）
+const examples = [
+    {
+        id: 1,
+        miyako: "tooriike=n=tii=du=i",
+        gloss: "通り池=dat=quot=foc=cnf",
+        japanese: "通り池といって"
+    },
+    {
+        id: 2,
+        miyako: "ssibara maibara",
+        gloss: "北側 南側",
+        japanese: "北側、南側"
+    },
+    {
+        id: 3,
+        miyako: "satubZtu=nu a-tar=ca.",
+        gloss: "隣人=nom ある-pst=hs",
+        japanese: "隣人がいたんだそうだ。2軒ね。"
+    },
+    {
+        id: 4,
+        miyako: "fɨta-kiv.",
+        gloss: "2-clf",
+        japanese: "隣人がいたんだそうだ。2軒ね。"
+    },
+    {
+        id: 5,
+        miyako: "fɨta-kiv ar-i-utui=du",
+        gloss: "2-clf ある-thm-crcm=foc",
+        japanese: "2軒あって"
+    },
+    {
+        id: 6,
+        miyako: "pZtu-kiv=ga im=nu acca ja-i-ba unukja=a",
+        gloss: "1-clf=nom 海=gen そば cop-thm-csl 3pl=top",
+        japanese: "1軒が海のそばだったので"
+    },
+    {
+        id: 7,
+        miyako: "pZtu-kiv=nu pZtu=nu",
+        gloss: "1-clf=gen 人=nom",
+        japanese: "１軒の人が"
+    },
+    {
+        id: 8,
+        miyako: "ssibara=ru a-tar=ru maibara=ru a-tar=ru mmja ss-a-n=suga",
+        gloss: "北側=foc cop-pst=q 南側=foc cop-pst=q dsc 知る-thm-neg=cnc",
+        japanese: "北か南か知らないが"
+    },
+    {
+        id: 9,
+        miyako: "pZtu-kiv=nu fɨta-kiv=kara pZtukiv=nu pZtu=nu",
+        gloss: "1-clf=nom 2-clf=abl 1軒=gen 人=nom",
+        japanese: "１軒が、2軒のうちの１軒の人が"
+    },
+    {
+        id: 10,
+        miyako: "junai ningjo junaitama=u tu-i-cc-i-i=i",
+        gloss: "ユナイ 人魚 ユナイタマ=acc 取る-thm-来る-thm-seq=cnf",
+        japanese: "ユナイ、人魚だよ、ユナイタマを捕らえてきて"
+    },
+    {
+        id: 11,
+        miyako: "kurus-i-i mmja uri=a ZZu ja-i-ba",
+        gloss: "殺す-thm-seq dsc 3sg=top 魚 cop-thm-csl",
+        japanese: "殺して、（ユナイは）魚だからね。"
+    },
+    {
+        id: 12,
+        miyako: "kurus-i-i katabata=u=baa jak-i-i fai",
+        gloss: "殺す-thm-seq 体半分=acc=otop 焼く-thm-seq 食べる.seq",
+        japanese: "殺して、体半分は焼いて食べ、"
+    },
+    {
+        id: 13,
+        miyako: "katabata=u=baa jaa=nu pana=n nuusi-i pus-i-a-tar=ca.",
+        gloss: "体半分=acc=otop 家=gen 屋根=dat 乗せる-seq 干す-thm-rsl-pst=hs",
+        japanese: "もう半分は家の屋根に乗せて干してあったんだって。"
+    },
+    {
+        id: 14,
+        miyako: "aidu rjuukjuu=nu rjuuguu=nu kam=nu",
+        gloss: "すると 琉球=龍宮=gen 神=nom",
+        japanese: "すると、琉球、、龍宮の神が"
+    },
+    {
+        id: 15,
+        miyako: "junaitama junaitama=ti ass-i-ba=du",
+        gloss: "ユナイタマ ユナイタマ=quot 言う-thm-csl=foc",
+        japanese: "「ユナイタマよ！ユナイタマよ！」と言うから"
+    },
+    {
+        id: 16,
+        miyako: "nara=a mmja kurus-ai=du",
+        gloss: "refl=top dsc 殺す-pass=foc",
+        japanese: "「私は殺されて」"
+    },
+    {
+        id: 17,
+        miyako: "katabata fa-ai-i katabata=a jaa=nu pana=n nuusi-rai-u-i-ba",
+        gloss: "体半分 食べる-pass-seq 体半分=top 家=gen 屋根=dat 乗せる-pass-prog-thm-csl",
+        japanese: "「体半分は食べられてしまい、もう半分は家の屋根に乗せられているので」"
+    },
+    {
+        id: 18,
+        miyako: "nara=n=na kuu-rai-n=ti aZ-tar=ca.",
+        gloss: "refl=dat=top 来る-pot-neg=quot 言う-pst=hs",
+        japanese: "「私には帰れません」と言ったんだそうだ。"
+    },
+    {
+        id: 19,
+        miyako: "unu rjuukjuu rjuuguu=nu kam=nu=du=mmja ui-saar=tii cc-i-i jurab-i-ba",
+        gloss: "その 龍宮=gen 神=nom=foc=dsc 3sg-連れる=quot 来る-thm-seq 呼ぶ-thm-csl",
+        japanese: "その龍宮の神がユナイを連れ帰ろうとやってきて呼ぶと"
+    },
+    {
+        id: 20,
+        miyako: "nara=a katabata=a fa-ai-i katabata=a jaa=nu pana=n nuusi-i=du nara=u=baa pus-i-i nci-ar=ti asɨ-tarjaa",
+        gloss: "refl=top 体半分=top 食べる-pass-seq 体半分=top 家=gen 屋根=dat 乗せる-seq=foc refl=acc=otop 干す-thm-seq 置く-rsl=quot 言う-ant",
+        japanese: "「私は体半分は食べられ、もう半分は家の屋根に乗せて私を干して置いています」と（ユナイタマは）言うので"
+    },
+    {
+        id: 21,
+        miyako: "ttigaa ukunam=mu jarah-a-di=ssiba",
+        gloss: "なら 津波=acc よこす-thm-int=csl",
+        japanese: "「では、津波をよこすから」"
+    },
+    {
+        id: 22,
+        miyako: "uri-i kuu=juu=tii aZ-tarjaa",
+        gloss: "降りる-seq 来る=voc=quot 言う-ant",
+        japanese: "「降りてきなさい」と（神が）言うと"
+    },
+    {
+        id: 23,
+        miyako: "nndi=ti aZ-tarjaa",
+        gloss: "はい=quot 言う-ant",
+        japanese: "「はい」と（ユナイタマが）言うと"
+    },
+    {
+        id: 24,
+        miyako: "uku-nam=mu baa=tti jarasɨ-tarjaa",
+        gloss: "大きい-波=acc バーッ=quot よこす-ant",
+        japanese: "（神が）大きい津波をよこしたら"
+    },
+    {
+        id: 25,
+        miyako: "tuduk-a-n=niba",
+        gloss: "届く-thm-neg=csl",
+        japanese: "届かないから"
+    },
+    {
+        id: 26,
+        miyako: "mata mme-pZtunam ookii ukunam=mu baa=tti jarasɨ-tarjaa",
+        gloss: "また もう-ひと波 大きい 津波=acc バーッ=quot よこす-ant",
+        japanese: "またもうひと波、大きい津波をバーっとよこすと"
+    },
+    {
+        id: 27,
+        miyako: "zazaa=ttii=mmja uri-i=mmja uri=a=mmja par-tar=ca.",
+        gloss: "ザザーッ=quot=dsc 降りる-seq=dsc 3sg=top=dsc 去る-pst=hs",
+        japanese: "ザザーっとユナイタマは降りて逃げ去ったんだとさ。"
+    },
+    {
+        id: 28,
+        miyako: "aidu mmja uma=nu ssibara maibara=a=mmja",
+        gloss: "それで dsc そこ=gen 北側 南側=top=dsc",
+        japanese: "さて、そこの北側・南側の家だが"
+    },
+    {
+        id: 29,
+        miyako: "doofɨti uti-i=i",
+        gloss: "ドーン 落ちる-seq=cnf",
+        japanese: "ドーンと崩落して"
+    },
+    {
+        id: 30,
+        miyako: "mmja tooriike=n nar-tar=ca.",
+        gloss: "dsc 通り池=dat なる-pst=hs",
+        japanese: "（そこが）通り池になったんだとさ。"
+    }
+];
+
+// グローバル変数
+let currentlyPlaying = null;
+
+// DOM要素の取得（ページ読み込み後）
+window.addEventListener('DOMContentLoaded', function() {
+    console.log('ページ読み込み完了');
+    
+    // 例文リストを生成
+    generateExampleList();
+    
+    // イベントリスナーの設定
+    setupEventListeners();
+});
+
+// 例文リストを生成する関数
+function generateExampleList() {
+    const exampleList = document.getElementById('exampleList');
+    if (!exampleList) {
+        console.error('例文リストの要素が見つかりません');
+        return;
+    }
+    
+    console.log('例文を生成中...', examples.length + '個');
+    
+    examples.forEach((example) => {
+        const exampleItem = document.createElement('div');
+        exampleItem.className = 'example-item';
+        exampleItem.dataset.id = example.id;
+        
+        // インターリニア形式で表示
+        const interlinearHTML = createInterlinearHTML(example.miyako, example.gloss);
+        
+        exampleItem.innerHTML = `
+            <div class="example-number">(${example.id})</div>
+            <div class="example-text">
+                <div class="interlinear-container">
+                    ${interlinearHTML}
+                </div>
+                <div class="japanese-text">${example.japanese}</div>
+            </div>
+            <div class="play-icon">▶</div>
+        `;
+        
+        // クリックイベントを追加
+        exampleItem.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('gloss-clickable')) {
+                playExample(example.id);
+            }
+        });
+        
+        exampleList.appendChild(exampleItem);
+    });
+}
+
+// インターリニア形式のHTMLを生成
+function createInterlinearHTML(miyakoText, glossText) {
+    const miyakoWords = miyakoText.split(' ');
+    const glossWords = glossText.split(' ');
+    
+    let html = '<div class="interlinear-row">';
+    
+    for (let i = 0; i < Math.max(miyakoWords.length, glossWords.length); i++) {
+        const miyakoWord = miyakoWords[i] || '';
+        const glossWord = glossWords[i] || '';
+        
+        // グロスをクリック可能にする
+        const clickableGloss = makeGlossClickable(glossWord);
+        
+        html += `
+            <div class="word-group">
+                <div class="miyako-word">${miyakoWord}</div>
+                <div class="gloss-word">${clickableGloss}</div>
+            </div>
+        `;
+    }
+    
+    html += '</div>';
+    return html;
+}
+
+// グロスをクリック可能にする
+function makeGlossClickable(glossText) {
+    const glossPattern = /[a-zA-Z]+(\.[a-zA-Z]+)?/g;
+    
+    return glossText.replace(glossPattern, (match) => {
+        // 日本語の単語は除外
+        if (match.match(/[ぁ-んァ-ヶー一-龯]/)) {
+            return match;
+        }
+        return `<span class="gloss-clickable" data-gloss="${match}">${match}</span>`;
+    });
+}
+
+// イベントリスナーの設定
+function setupEventListeners() {
+    // グロスクリックイベント
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('gloss-clickable')) {
+            e.stopPropagation();
+            const gloss = e.target.dataset.gloss;
+            showGlossTooltip(gloss, e.target);
+        } else if (!e.target.closest('.gloss-tooltip')) {
+            hideGlossTooltip();
+        }
+    });
+    
+    // 音声関連のイベント
+    const audio = document.getElementById('audio');
+    if (audio) {
+        audio.addEventListener('timeupdate', updateProgress);
+        audio.addEventListener('ended', function() {
+            updatePlayingState(null);
+        });
+    }
+}
+
+// グロスの吹き出しを表示
+function showGlossTooltip(gloss, element) {
+    const glossTooltip = document.getElementById('glossTooltip');
+    const glossTitle = document.getElementById('glossTitle');
+    const glossDescription = document.getElementById('glossDescription');
+    
+    const translation = getGlossTranslation(gloss);
+    
+    glossTitle.textContent = gloss.toUpperCase();
+    glossDescription.textContent = translation;
+    
+    // 位置を計算
+    const rect = element.getBoundingClientRect();
+    const tooltipWidth = 300;
+    let left = rect.left + (rect.width / 2) - (tooltipWidth / 2);
+    const top = rect.top - 60;
+    
+    // 画面からはみ出ないように調整
+    if (left < 10) left = 10;
+    if (left + tooltipWidth > window.innerWidth - 10) {
+        left = window.innerWidth - tooltipWidth - 10;
+    }
+    
+    glossTooltip.style.left = left + 'px';
+    glossTooltip.style.top = top + 'px';
+    glossTooltip.classList.add('show');
+}
+
+// グロスの吹き出しを非表示
+function hideGlossTooltip() {
+    const glossTooltip = document.getElementById('glossTooltip');
+    if (glossTooltip) {
+        glossTooltip.classList.remove('show');
+    }
+}
+
+// 音声を再生
+async function playExample(id) {
+    console.log('音声再生開始:', id);
+    const audio = document.getElementById('audio');
+    const exampleItem = document.querySelector(`[data-id="${id}"]`);
+    
+    if (!audio || !exampleItem) {
+        console.error('必要な要素が見つかりません');
+        return;
+    }
+    
+    // 既に再生中の場合は停止
+    if (currentlyPlaying === id && !audio.paused) {
+        console.log('再生を停止します');
+        audio.pause();
+        updatePlayingState(null);
+        return;
+    }
+    
+    // ローディング表示
+    exampleItem.classList.add('loading');
+    exampleItem.querySelector('.play-icon').textContent = '⟳';
+    
+    try {
+        // 対応する音声URLを取得（配列のインデックスは0から始まるので-1）
+        const audioUrl = audioUrls[id - 1];
+        
+        if (!audioUrl) {
+            throw new Error('音声ファイルが見つかりません');
+        }
+        
+        console.log(`Loading audio ${id} from:`, audioUrl);
+        
+        // CORSプロキシを使用
+        const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(audioUrl);
+        
+        audio.src = proxyUrl;
+        
+        // 音声のロードを待つ
+        await new Promise((resolve, reject) => {
+            audio.addEventListener('canplaythrough', resolve, { once: true });
+            audio.addEventListener('error', reject, { once: true });
+            audio.load();
+        });
+        
+        // 再生
+        await audio.play();
+        
+        updatePlayingState(id);
+        exampleItem.classList.remove('loading', 'error');
+        
+    } catch (err) {
+        console.error('音声ファイルの再生エラー:', err);
+        exampleItem.classList.remove('loading');
+        exampleItem.classList.add('error');
+        exampleItem.querySelector('.play-icon').textContent = '⚠';
+        
+        // フォールバック: 直接URLを試す
+        try {
+            audio.src = audioUrls[id - 1];
+            await audio.play();
+            updatePlayingState(id);
+            exampleItem.classList.remove('error');
+        } catch (fallbackErr) {
+            console.error('フォールバックも失敗:', fallbackErr);
+            alert('音声の再生に失敗しました。CORSプロキシサーバーの問題か、ネットワークエラーの可能性があります。');
+        }
+        
+        updatePlayingState(null);
+    }
+}
+
+// 再生状態を更新
+function updatePlayingState(id) {
+    const audioPlayer = document.getElementById('audioPlayer');
+    const currentExample = document.getElementById('currentExample');
+    const progressBar = document.getElementById('progressBar');
+    const statusText = document.getElementById('statusText');
+    
+    document.querySelectorAll('.example-item').forEach(item => {
+        item.classList.remove('playing');
+        const icon = item.querySelector('.play-icon');
+        if (!item.classList.contains('loading') && !item.classList.contains('error')) {
+            icon.textContent = '▶';
+        }
+    });
+    
+    if (id !== null) {
+        const playingItem = document.querySelector(`[data-id="${id}"]`);
+        if (playingItem) {
+            playingItem.classList.add('playing');
+            playingItem.querySelector('.play-icon').textContent = '⏸';
+        }
+        
+        currentlyPlaying = id;
+        currentExample.textContent = `例文 (${id})`;
+        audioPlayer.classList.add('active');
+        statusText.textContent = `例文 ${id} を再生中`;
+    } else {
+        currentlyPlaying = null;
+        audioPlayer.classList.remove('active');
+        progressBar.style.width = '0%';
+        statusText.textContent = 'オンライン';
+    }
+}
+
+// 進行状況を更新
+function updateProgress() {
+    const audio = document.getElementById('audio');
+    const progressBar = document.getElementById('progressBar');
+    
+    if (audio.duration) {
+        const progress = (audio.currentTime / audio.duration) * 100;
+        progressBar.style.width = progress + '%';
+    }
+}
+
+// オンライン/オフライン状態の監視
+window.addEventListener('online', () => {
+    const statusText = document.getElementById('statusText');
+    const sourceText = document.getElementById('sourceText');
+    if (statusText) statusText.textContent = 'オンライン';
+    if (sourceText) sourceText.textContent = 'Zenodo（直接接続）';
+});
+
+window.addEventListener('offline', () => {
+    const statusText = document.getElementById('statusText');
+    const sourceText = document.getElementById('sourceText');
+    if (statusText) statusText.textContent = 'オフライン';
+    if (sourceText) sourceText.textContent = '接続なし';
+});
+    </script>
+</body>
+</html>
